@@ -1,0 +1,14 @@
+{
+  "name": "Utility meter",
+  "wifi": {
+    "ssid": "YOURSSID",
+    "password": "YOURSSIDPASS"
+  },
+  "mqtt": {
+    "host": "IP.OF.YOUR.MQTTBROKER",
+    "port": 1883
+  },
+  "ota": {
+    "enabled": false
+  }
+}
