@@ -8,8 +8,8 @@ Counts pulses and keeps total, calculates hourly consumption and flow.
 All data is published by MQTT, using Homie.
 
 dependencies:
-<a href="https://github.com/marvinroger/homie-esp8266">Homie by Marvin Roger</a> and subsequent dependencies
-<a href="https://github.com/JoaoLopesF/ESP8266-RemoteDebug-Telnet">RemoteDebug by JoaoLopesF</a> and subsequent dependencies
+- <a href="https://github.com/marvinroger/homie-esp8266">Homie by Marvin Roger</a> and subsequent dependencies
+- <a href="https://github.com/JoaoLopesF/ESP8266-RemoteDebug-Telnet">RemoteDebug by JoaoLopesF</a> and subsequent dependencies
 
 To do:
 - testing and debugging!
