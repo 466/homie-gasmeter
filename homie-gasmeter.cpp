@@ -78,7 +78,7 @@ void LoopHandler() {
     PreviousPulseCounter = PulseCounter;
     if(IndexHCounter<60)IndexHCounter++;
     else IndexHCounter = 0;
-    int i = 0;;
+    int i = 0;
     float Sum = 0.0;
     for(i=0;i<60;i++) Sum = Sum + Counterh[i];
     GasMeter.setProperty("counter").send(String(Counter));
@@ -123,4 +123,3 @@ void loop() {
   Homie.loop();
   Debug.handle();
   }
-

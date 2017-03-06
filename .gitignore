@@ -1,1 +1,7 @@
+.pioenvs
+.piolibdeps
+.clang_complete
+.gcc-flags.json
+.travis.yml
+lib/readme.txt
 data/homie/config.json
