@@ -11,7 +11,7 @@ const char *__FLAGGED_FW_NAME = "\xbf\x84\xe4\x13\x54" FW_NAME "\x93\x44\x6b\xa7
 const char *__FLAGGED_FW_VERSION = "\x6a\x3f\x3e\x0e\xe1" FW_VERSION "\xb0\x30\x48\xd4\x1a";
 /* End of magic sequence for Autodetectable Binary Upload */
 
-#define PINGASCOUNTER D2
+#define PINGASCOUNTER D3
 #define DEBOUNCINGTIME 60000 //in microseconds
 #define INTERVAL 60 //Interval for publishing measured and calculated values. Keep in mind that the current flow is also calculated using the interval
 #define COUNTERUNIT "m3" //unit in which the counter meter publishes values
@@ -81,6 +81,7 @@ void loopHandler() {
     static volatile unsigned long lastMicros = 0;
     if (micros() - lastMicros > DEBOUNCINGTIME || lastMicros == 0) {
       pulseCounter++;
+      addPulse = false;
       lastMicros = micros();
     }
   }
@@ -100,7 +101,7 @@ void loopHandler() {
       gasMeter.setProperty("hcounter").send(String(sum));
       gasMeter.setProperty("flow").send(String(flow));
     }
-    timeToPublish = 0;
+    timeToPublish = false;
     #ifdef DEBUGGING
       Homie.getLogger() << "Total counter: " << counter << COUNTERUNIT << endl;
       Homie.getLogger() << "Hourly counter: " << sum << COUNTERUNIT << endl;
