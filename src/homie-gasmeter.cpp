@@ -20,8 +20,8 @@ const char *__FLAGGED_FW_VERSION = "\x6a\x3f\x3e\x0e\xe1" FW_VERSION "\xb0\x30\x
 #define DEBUGGING //Comment out this line if you don't want debug messages. If kept, there will be an open telnet server available!
 
 #ifdef DEBUGGING
- #include <TelnetLogger.h>
- TelnetLogger debug;
+ #include <TelnetPrinter.h>
+ TelnetPrinter debug;
 #endif
 
 
