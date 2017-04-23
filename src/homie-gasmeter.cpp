@@ -12,25 +12,24 @@ const char *__FLAGGED_FW_VERSION = "\x6a\x3f\x3e\x0e\xe1" FW_VERSION "\xb0\x30\x
 /* End of magic sequence for Autodetectable Binary Upload */
 
 #define PINGASCOUNTER D3
-#define DEBOUNCINGTIME 60000 //in microseconds
-#define INTERVAL 60 //Interval for publishing measured and calculated values. Keep in mind that the current flow is also calculated using the interval
-#define COUNTERUNIT "m3" //unit in which the counter meter publishes values
-#define FLOWUNIT "m3/h" //unit in which the flow meter publishes values. This value is related to the INTERVAL!
-#define COUNTERFACTOR 0.01 //factor to translate pulses to the counter unit stated above: meter spec says 1 pulse = 0.01m3
 #define DEBUGGING //Comment out this line if you don't want debug messages. If kept, there will be an open telnet server available!
-
 #ifdef DEBUGGING
- #include <TelnetPrinter.h>
- TelnetPrinter debug;
+ #include <WifiPrinter.h>
+ WifiPrinter debug;
 #endif
 
+const unsigned int debounceTime = 60000; //in microseconds
+const unsigned int interval = 60; //Interval for publishing measured and calculated values. Keep in mind that the current flow is also calculated using the interval
+const char* counterUnit = "m3"; //unit in which the counter meter publishes values
+const char* flowUnit = "m3/h"; //unit in which the flow meter publishes values. This value is related to the INTERVAL!
+const float counterFactor = 0.01; //factor to translate pulses to the counter unit stated above: meter spec says 1 pulse = 0.01m3
 
 HomieNode gasMeter("gasmeter", "meter");
 Ticker publishTicker;
 volatile unsigned int pulseCounter = 0;
 unsigned int previousPulseCounter = 0;
 volatile bool addPulse = false;
-volatile bool timeToPublish = false;
+volatile bool doPublish = false;
 float flow = 0;
 float counterh[60] = {0.0};
 float counter = 0;
@@ -46,14 +45,14 @@ void countPulse() {
 //-------------------------------------------------------------------
 //Ticker handler for publisher
 void publishValues() {
-  timeToPublish = true;
+  doPublish = true;
 }
 
 
 //-------------------------------------------------------------------
 //Set total counter for gas
 bool setCounter(const HomieRange& range, const String& value) {
-  pulseCounter = value.toFloat() / COUNTERFACTOR;
+  pulseCounter = value.toFloat() / counterFactor;
   #ifdef DEBUGGING
     Homie.getLogger() << "New input gas counter:" << value << endl;
     Homie.getLogger() << "New gas pulse counter: " << pulseCounter << endl;
@@ -65,9 +64,9 @@ bool setCounter(const HomieRange& range, const String& value) {
 //-------------------------------------------------------------------
 //Homie setup function
 void setupHandler() {
-  gasMeter.setProperty("unit_counter").send(COUNTERUNIT);
-  gasMeter.setProperty("unit_hcounter").send(COUNTERUNIT);
-  gasMeter.setProperty("unit_flow").send(FLOWUNIT);
+  gasMeter.setProperty("unit_counter").send(counterUnit);
+  gasMeter.setProperty("unit_hcounter").send(counterUnit);
+  gasMeter.setProperty("unit_flow").send(flowUnit);
   #ifdef DEBUGGING
     Homie.getLogger() << "Homie setup done." << endl;
   #endif
@@ -79,17 +78,17 @@ void setupHandler() {
 void loopHandler() {
   if(addPulse){ //pulse detected
     static volatile unsigned long lastMicros = 0;
-    if (micros() - lastMicros > DEBOUNCINGTIME || lastMicros == 0) {
+    if (micros() - lastMicros > debounceTime || lastMicros == 0) {
       pulseCounter++;
       addPulse = false;
       lastMicros = micros();
     }
   }
-  if(timeToPublish) { //only publish when Ticker has said so
-    counter = (float)pulseCounter * COUNTERFACTOR;
-    flow = (float)(pulseCounter - previousPulseCounter) * COUNTERFACTOR * INTERVAL;
+  if(doPublish) { //only publish when Ticker has said so
+    counter = (float)pulseCounter * counterFactor;
+    flow = (float)(pulseCounter - previousPulseCounter) * counterFactor * interval;
     static int indexHCounter = 0;
-    counterh[indexHCounter] = (float)(pulseCounter - previousPulseCounter) * COUNTERFACTOR;
+    counterh[indexHCounter] = (float)(pulseCounter - previousPulseCounter) * counterFactor;
     previousPulseCounter = pulseCounter;
     if(indexHCounter < 60) indexHCounter++;
     else indexHCounter = 0;
@@ -101,11 +100,11 @@ void loopHandler() {
       gasMeter.setProperty("hcounter").send(String(sum));
       gasMeter.setProperty("flow").send(String(flow));
     }
-    timeToPublish = false;
+    doPublish = false;
     #ifdef DEBUGGING
-      Homie.getLogger() << "Total counter: " << counter << COUNTERUNIT << endl;
-      Homie.getLogger() << "Hourly counter: " << sum << COUNTERUNIT << endl;
-      Homie.getLogger() << "Flow: " << flow << FLOWUNIT << endl;
+      Homie.getLogger() << "Total counter: " << counter << counterUnit << endl;
+      Homie.getLogger() << "Hourly counter: " << sum << counterUnit << endl;
+      Homie.getLogger() << "Flow: " << flow << flowUnit << endl;
       Homie.getLogger() << "Free heap: " << ESP.getFreeHeap() << endl;
     #endif
   }
@@ -115,7 +114,7 @@ void loopHandler() {
 //-------------------------------------------------------------------
 //std ESP8266/Arduino functions
 void setup() {
-  publishTicker.attach(INTERVAL, publishValues);
+  publishTicker.attach(interval, publishValues);
   pinMode(PINGASCOUNTER, INPUT_PULLUP);
   attachInterrupt(PINGASCOUNTER, countPulse, FALLING);
   #ifdef DEBUGGING

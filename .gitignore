@@ -5,4 +5,4 @@
 .travis.yml
 lib/readme.txt
 data/homie/config.json
-platformio.ini
+.gitignore
